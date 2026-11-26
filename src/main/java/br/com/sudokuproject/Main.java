@@ -2,17 +2,16 @@ package br.com.sudokuproject;
 
 import br.com.sudokuproject.model.Board;
 import br.com.sudokuproject.model.Space;
+import br.com.sudokuproject.util.GameConfigParser;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.stream.Stream;
 
 import static br.com.sudokuproject.util.BoardTemplate.BOARD_TEMPLATE;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-import static java.util.stream.Collectors.toMap;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
@@ -24,11 +23,14 @@ public class Main {
     private final static int BOARD_LIMIT = 9;
 
     public static void main(String[] args) {
-        final var positions = Stream.of(args)
-                .collect(toMap(
-                        k -> k.split(";")[0],
-                        v -> v.split(";")[1]
-                ));
+        final Map<String, String> positions;
+        try {
+            positions = GameConfigParser.parse(args);
+        } catch (IllegalArgumentException exception) {
+            System.err.println(exception.getMessage());
+            System.err.println("Uso: coluna,linha;valor,fixed (informe todas as 81 posições)");
+            return;
+        }
         var option = -1;
         while (true){
             System.out.println("Selecione uma das opções a seguir");

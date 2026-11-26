@@ -1,7 +1,9 @@
 package br.com.sudokuproject.model;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static br.com.sudokuproject.model.GameStatusEnum.*;
 import static java.util.Objects.isNull;
@@ -28,12 +30,45 @@ public class Board {
     }
 
     public boolean hasErrors(){
-        if(getStatus() == NON_STARTED){
-            return false;
+        for (int index = 0; index < 9; index++) {
+            if (hasDuplicates(getSpacesInRow(index)) || hasDuplicates(getSpacesInColumn(index))) {
+                return true;
+            }
         }
 
-        return spaces.stream().flatMap(Collection::stream)
-                .anyMatch(s -> nonNull(s.getActual()) && !s.getActual().equals(s.getExpected()));
+        for (int startCol = 0; startCol < 9; startCol += 3) {
+            for (int startRow = 0; startRow < 9; startRow += 3) {
+                if (hasDuplicates(getSpacesInSector(startCol, startRow))) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private List<Space> getSpacesInRow(final int row) {
+        return spaces.stream().map(column -> column.get(row)).toList();
+    }
+
+    private List<Space> getSpacesInColumn(final int column) {
+        return spaces.get(column);
+    }
+
+    private List<Space> getSpacesInSector(final int startCol, final int startRow) {
+        return java.util.stream.IntStream.range(startCol, startCol + 3)
+                .boxed()
+                .flatMap(col -> java.util.stream.IntStream.range(startRow, startRow + 3)
+                        .mapToObj(row -> spaces.get(col).get(row)))
+                .toList();
+    }
+
+    private boolean hasDuplicates(final List<Space> group) {
+        final Set<Integer> values = new HashSet<>();
+        return group.stream()
+                .map(Space::getActual)
+                .filter(value -> nonNull(value))
+                .anyMatch(value -> !values.add(value));
     }
 
     public boolean changeValue(final int col, final int row, final int value){
